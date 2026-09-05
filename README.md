@@ -1,190 +1,240 @@
 # GPS-finder-
 GPS-Based Vehicle Tracking System is a full-stack application built with Flutter and Python FastAPI to track buses/vehicles in real time
 GPS Vehicle Tracking Flutter App
+# GPS Vehicle Tracking System
 
-Flutter client for the GPS vehicle tracking assessment. The frontend intentionally stays simple: the backend carries the important business logic, authentication, authorization, route assignment, and GPS data rules.
+A simple GPS vehicle tracking system built with **Flutter** and **FastAPI**.
 
-Screens
+The backend handles authentication, authorization, vehicle assignments, and GPS data. The Flutter app displays the assigned route, vehicle, and live location.
 
-1. Login
+## Tech Stack
 
-email
+* **Flutter** — Mobile application
+* **FastAPI** — Backend API
+* **PostgreSQL** — Database
+* **MQTT / Mosquitto** — GPS data communication
+* **JWT** — Authentication
+* **Docker Compose** — Local development
 
-password
+## Architecture
 
-submit button
+```text
+GPS Device / Simulator
+        |
+       MQTT
+        |
+    Mosquitto
+        |
+   FastAPI Backend
+        |
+   PostgreSQL
+        ^
+        |
+   Flutter App
+```
 
-loading state
+## Main Flow
 
-API error message
+```text
+Login
+  ↓
+JWT Authentication
+  ↓
+User Assignment
+  ↓
+Route + Vehicle
+  ↓
+Current Location / GPS History
+  ↓
+Flutter Map
+```
 
-save JWT securely after successful login
+## Backend
 
-2. Home / Tracking
+The backend is responsible for:
 
-Show:
+* User authentication
+* Route and vehicle assignments
+* GPS data ingestion
+* Current vehicle location
+* GPS history
+* API authorization
 
-assigned route name/code
+### Database
 
-assigned vehicle code
+```text
+Users
+  |
+Assignments
+  |
+Route ─── Vehicle
+           |
+       GPS Points
+```
 
-vehicle status
+## GPS Tracking
 
-latest latitude/longitude
+GPS data is received through MQTT.
 
-latest speed
+**Topic:**
 
-last updated time
+```text
+vehicles/{vehicle_id}/gps
+```
 
-refresh action
+**Example payload:**
 
-map
+```json
+{
+  "latitude": 10.1234,
+  "longitude": 76.5432,
+  "speed": 42.5,
+  "timestamp": "2026-09-05T12:30:00Z"
+}
+```
 
-The assessment explicitly requires the logged-in user to see their assigned route, vehicle, latest GPS location, and status.
+When a GPS message is received, the backend:
 
-Recommended Flutter architecture
+1. Validates the data.
+2. Verifies the vehicle.
+3. Stores the GPS point.
+4. Updates the vehicle's latest location.
 
-Keep the UI simple but do not put API calls directly inside widgets.
+## Authorization
 
-lib/
-├── main.dart
-├── core/
-│   ├── config/
-│   │   └── api_config.dart
-│   ├── network/
-│   │   └── api_client.dart
-│   ├── storage/
-│   │   └── token_storage.dart
-│   └── errors/
-│       └── app_exception.dart
-├── features/
-│   ├── auth/
-│   │   ├── data/
-│   │   ├── models/
-│   │   ├── presentation/
-│   │   └── auth_controller.dart
-│   └── tracking/
-│       ├── data/
-│       ├── models/
-│       ├── presentation/
-│       └── tracking_controller.dart
-└── app/
-    ├── app.dart
-    └── router.dart
+Authorization is handled by the **backend**, not Flutter.
 
-Use a lightweight state-management solution such as Riverpod. Do not over-engineer the frontend because the assessment emphasis is the end-to-end backend flow.
+```text
+JWT
+ ↓
+User
+ ↓
+Assignment
+ ↓
+Allowed Vehicle
+```
 
-API contract
+Example:
 
-Configure one base URL, for example:
+```text
+User A → Route A → BUS-001
+User B → Route B → BUS-002
+```
 
-http://10.0.2.2:8000/api/v1
+A user cannot access another user's vehicle or GPS history.
 
-Endpoints consumed by Flutter:
+## API
 
-POST /auth/login
-GET  /me/assignment
-GET  /me/vehicle
-GET  /me/vehicle/location
-GET  /me/vehicle/history
+### Authentication
 
-Attach:
+```http
+POST /api/v1/auth/login
+```
 
+### User APIs
+
+```http
+GET /api/v1/me/assignment
+GET /api/v1/me/vehicle
+GET /api/v1/me/vehicle/location
+GET /api/v1/me/vehicle/history
+```
+
+Protected requests use:
+
+```http
 Authorization: Bearer <token>
+```
 
-to protected requests.
+## Flutter App
 
-Data flow
+The Flutter application contains two main screens:
 
-LoginScreen
-   |
-   v
-AuthController
-   |
-   v
-FastAPI /auth/login
-   |
-   v
-JWT stored securely
-   |
-   v
-TrackingScreen
-   |
-   +--> /me/assignment
-   +--> /me/vehicle
-   +--> /me/vehicle/location
-   |
-   v
-Map + vehicle status UI
+### Login
 
-Map implementation
+* Email and password
+* Loading state
+* Login errors
+* Secure JWT storage
 
-For the assessment, the simplest good approach is:
+### Tracking
 
-route stops from the backend -> List<LatLng> -> polyline
+* Assigned route
+* Vehicle information
+* Vehicle status
+* Current location
+* Speed
+* Last updated time
+* Map with route and vehicle marker
 
-current vehicle location -> marker
+The Flutter app only displays data returned by the secured backend. Business rules and authorization remain on the server.
 
-fit map bounds to the route/current marker
+## Project Structure
 
-Google Maps or another Flutter map package can be used. Keep map rendering separate from API/state logic.
+### Backend
 
-Error states
+```text
+backend/
+├── api/
+├── core/
+├── models/
+├── schemas/
+├── services/
+├── repositories/
+├── mqtt/
+├── db/
+└── tests/
+```
 
-The UI should explicitly show:
+### Flutter
 
-loading spinner during login/data retrieval
+```text
+frontend/
+└── lib/
+    ├── core/
+    ├── features/
+    │   ├── auth/
+    │   └── tracking/
+    ├── app/
+    └── main.dart
+```
 
-invalid credentials
+## Testing
 
-expired/invalid token -> clear token and return to login
+The important test cases include:
 
-server unavailable
+* Valid login
+* Invalid credentials
+* User assignment
+* Vehicle authorization
+* GPS message storage
+* Latest location update
+* Invalid GPS data
+* Cross-user vehicle access
 
-no GPS data yet
+## Running the Project
 
-empty history
+Start the backend services with:
 
-unexpected server error
+```bash
+docker compose up --build
+```
 
-Important security rule
+Then start the Flutter application.
 
-Flutter should not contain logic such as:
+A GPS simulator can be used to publish test locations and demonstrate the vehicle moving on the map.
 
-if (vehicleId == 'BUS-001') { ... }
+## Definition of Done
 
-The server decides what the authenticated user can access. The Flutter app only renders the response from the secured API.
+The system is ready when:
 
-Interview explanation
+* Users can log in.
+* Each user sees their assigned route and vehicle.
+* GPS data is received through MQTT.
+* Current and historical locations are available.
+* Vehicle movement can be shown on the Flutter map.
+* Users cannot access another user's vehicle or GPS history.
 
-“The Flutter app is deliberately thin. It handles authentication, state, API communication, map rendering, loading, and error states. It does not enforce the assignment rule because client-side authorization is not trustworthy. The FastAPI backend resolves the logged-in user and returns only that user's assigned route and vehicle.”
+## Key Principle
 
-Suggested packages
-
-dio for HTTP
-
-flutter_riverpod for state management
-
-flutter_secure_storage for JWT storage
-
-go_router for navigation
-
-google_maps_flutter or another suitable map package
-
-Definition of done
-
-A reviewer should be able to:
-
-Start the FastAPI stack.
-
-Start Flutter.
-
-Log in as User A and see Route A/BUS-001.
-
-Start the GPS simulator and see the latest location update.
-
-Log out.
-
-Log in as User B and see Route B/BUS-002.
-
-Confirm that User A cannot retrieve User B's vehicle through the API.
+> **Flutter displays the data. FastAPI owns the business logic and security.**
