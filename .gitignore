@@ -1,0 +1,92 @@
+# ==========================================
+# GPS Vehicle Tracking System - .gitignore
+# ==========================================
+
+# ------------------------------------------
+# Environment & Secret Configuration
+# ------------------------------------------
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.cert
+
+# ------------------------------------------
+# Python / FastAPI Backend
+# ------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+
+# ------------------------------------------
+# Flutter / Dart Frontend
+# ------------------------------------------
+frontend/.dart_tool/
+frontend/.fvm/
+frontend/.idea/
+frontend/.pub-cache/
+frontend/.pub/
+frontend/build/
+frontend/flutter_*.png
+frontend/ios/Runner.xcworkspace
+frontend/ios/Runner.xcodeproj/project.xcworkspace
+frontend/ios/Flutter/App.framework
+frontend/ios/Flutter/Flutter.framework
+frontend/ios/Flutter/Flutter.podspec
+frontend/ios/Flutter/Generated.xcconfig
+frontend/ios/Flutter/app.ptl
+frontend/ios/Flutter/ephemeral/
+frontend/android/app/debug/
+frontend/android/app/profile/
+frontend/android/app/release/
+frontend/android/key.properties
+*.apk
+*.aab
+*.app
+
+# ------------------------------------------
+# IDE & Code Editors
+# ------------------------------------------
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+.idea/
+*.iws
+*.iml
+*.ipr
+.project
+.settings/
+
+# ------------------------------------------
+# Docker & System / OS Files
+# ------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.log
+docker-data/
+postgres-data/
