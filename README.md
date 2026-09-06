@@ -1,240 +1,163 @@
-# GPS-finder-
-GPS-Based Vehicle Tracking System is a full-stack application built with Flutter and Python FastAPI to track buses/vehicles in real time
-GPS Vehicle Tracking Flutter App
 # GPS Vehicle Tracking System
 
-A simple GPS vehicle tracking system built with **Flutter** and **FastAPI**.
+A production-grade, secure **GPS Vehicle Tracking System** backend built with **FastAPI**, **PostgreSQL**, **Alembic**, and **MQTT (Mosquitto)**.
 
-The backend handles authentication, authorization, vehicle assignments, and GPS data. The Flutter app displays the assigned route, vehicle, and live location.
+The system enforces server-side authorization boundaries, single active user assignments, out-of-order telemetry stale packet protection, keyset pagination, and clean REST API contracts for mobile presentation clients (Flutter).
 
-## Tech Stack
+---
 
-* **Flutter** — Mobile application
-* **FastAPI** — Backend API
-* **PostgreSQL** — Database
-* **MQTT / Mosquitto** — GPS data communication
-* **JWT** — Authentication
-* **Docker Compose** — Local development
-
-## Architecture
+## Technical Architecture
 
 ```text
-GPS Device / Simulator
-        |
-       MQTT
-        |
-    Mosquitto
-        |
-   FastAPI Backend
-        |
-   PostgreSQL
-        ^
-        |
-   Flutter App
+┌──────────────────────────────────────────────────────────┐
+│                   Flutter Mobile App                     │
+│               Login / Tracking UI / Map                  │
+└────────────────────────────┬─────────────────────────────┘
+                             │ HTTPS + JWT Bearer
+                             ▼
+┌──────────────────────────────────────────────────────────┐
+│                   FastAPI Backend                        │
+│         Routers ──► Services ──► Repositories            │
+└──────────────┬─────────────────────────────┬─────────────┘
+               │ Async SQL                   │ MQTT Protocol
+               ▼                             ▼
+┌──────────────────────────┐   ┌───────────────────────────┐
+│   PostgreSQL Database    │   │  Mosquitto MQTT Broker    │
+│ Users/Routes/GPS History │   └─────────────▲─────────────┘
+└──────────────────────────┘                 │ Telemetry
+                                             │
+                                ┌────────────┴──────────────┐
+                                │ GPS Simulator / Hardware  │
+                                └───────────────────────────┘
 ```
 
-## Main Flow
+---
+
+## Key Features
+
+1. **Security & Server-Side Authorization Boundary**:
+   - Authentication via bcrypt hashed passwords and signed JWT access tokens (`POST /api/v1/auth/login`).
+   - Strict server-side vehicle scoping: Endpoints ignore client parameter tampering. Users can only access vehicles mapped to their active assignment (`GET /api/v1/me/assignment`, `GET /api/v1/me/vehicle`).
+   - Cross-user vehicle access attempts return `HTTP 403 Forbidden` (`VEHICLE_ACCESS_DENIED`).
+
+2. **Single Active Assignment & Integrity Invariant**:
+   - PostgreSQL Partial Unique Index (`CREATE UNIQUE INDEX idx_unique_active_user ON assignments(user_id) WHERE is_active = TRUE;`) guarantees at most one active assignment per user while preserving full assignment history.
+   - Assignment Integrity Invariant (`vehicle.route_id == assignment.route_id`) validated in the service layer.
+
+3. **MQTT Telemetry & Out-of-Order Engine**:
+   - Background async MQTT consumer subscribing to `vehicles/{vehicle_code}/gps`.
+   - Structural bounds validation (`-90 <= lat <= 90`, `-180 <= lon <= 180`, `speed >= 0`).
+   - Every valid packet is appended to `gps_points` history.
+   - **Stale Packet Protection**: Current vehicle location state is updated **ONLY IF** `incoming recorded_at >= latest_recorded_at`. Out-of-order packets cannot move current vehicle location backwards on the map.
+
+4. **Vehicle Status Engine**:
+   - Dynamic vehicle online status calculation:
+     - `ACTIVE`: Telemetry received within `ONLINE_THRESHOLD_SECONDS` (default: 60s).
+     - `OFFLINE`: Telemetry older than `ONLINE_THRESHOLD_SECONDS`.
+     - `UNKNOWN`: No telemetry ever recorded for the vehicle.
+
+5. **Polyline Sequence & Keyset Pagination**:
+   - Route stops in `/api/v1/me/assignment` are strictly sorted by `sequence ASC` for direct polyline rendering.
+   - History queries (`/api/v1/me/vehicle/history`) support range filtering (`from`, `to`) and $O(\log N)$ composite keyset pagination (`recorded_at DESC, id DESC`).
+
+---
+
+## Directory Structure
 
 ```text
-Login
-  ↓
-JWT Authentication
-  ↓
-User Assignment
-  ↓
-Route + Vehicle
-  ↓
-Current Location / GPS History
-  ↓
-Flutter Map
-```
-
-## Backend
-
-The backend is responsible for:
-
-* User authentication
-* Route and vehicle assignments
-* GPS data ingestion
-* Current vehicle location
-* GPS history
-* API authorization
-
-### Database
-
-```text
-Users
-  |
-Assignments
-  |
-Route ─── Vehicle
-           |
-       GPS Points
-```
-
-## GPS Tracking
-
-GPS data is received through MQTT.
-
-**Topic:**
-
-```text
-vehicles/{vehicle_id}/gps
-```
-
-**Example payload:**
-
-```json
-{
-  "latitude": 10.1234,
-  "longitude": 76.5432,
-  "speed": 42.5,
-  "timestamp": "2026-09-05T12:30:00Z"
-}
-```
-
-When a GPS message is received, the backend:
-
-1. Validates the data.
-2. Verifies the vehicle.
-3. Stores the GPS point.
-4. Updates the vehicle's latest location.
-
-## Authorization
-
-Authorization is handled by the **backend**, not Flutter.
-
-```text
-JWT
- ↓
-User
- ↓
-Assignment
- ↓
-Allowed Vehicle
-```
-
-Example:
-
-```text
-User A → Route A → BUS-001
-User B → Route B → BUS-002
-```
-
-A user cannot access another user's vehicle or GPS history.
-
-## API
-
-### Authentication
-
-```http
-POST /api/v1/auth/login
-```
-
-### User APIs
-
-```http
-GET /api/v1/me/assignment
-GET /api/v1/me/vehicle
-GET /api/v1/me/vehicle/location
-GET /api/v1/me/vehicle/history
-```
-
-Protected requests use:
-
-```http
-Authorization: Bearer <token>
-```
-
-## Flutter App
-
-The Flutter application contains two main screens:
-
-### Login
-
-* Email and password
-* Loading state
-* Login errors
-* Secure JWT storage
-
-### Tracking
-
-* Assigned route
-* Vehicle information
-* Vehicle status
-* Current location
-* Speed
-* Last updated time
-* Map with route and vehicle marker
-
-The Flutter app only displays data returned by the secured backend. Business rules and authorization remain on the server.
-
-## Project Structure
-
-### Backend
-
-```text
-backend/
-├── api/
-├── core/
-├── models/
-├── schemas/
-├── services/
-├── repositories/
-├── mqtt/
-├── db/
-└── tests/
-```
-
-### Flutter
-
-```text
-frontend/
-└── lib/
-    ├── core/
-    ├── features/
-    │   ├── auth/
-    │   └── tracking/
+GPS-finder-/
+├── .env.example                # Environment variable configuration template
+├── README.md                   # Project documentation
+├── docker/
+│   └── mosquitto.conf          # Development MQTT broker configuration
+├── docs/
+│   └── API_CONTRACT.md         # Master REST API Specification
+└── backend/
+    ├── alembic.ini             # Alembic migration configuration
+    ├── alembic/                # Async database migrations & revisions
+    │   ├── env.py
+    │   └── versions/
+    │       └── 0001_initial_schema.py
     ├── app/
-    └── main.dart
+    │   ├── main.py             # FastAPI entrypoint & lifecycle manager
+    │   ├── api/                # API routers & security dependencies
+    │   │   ├── deps.py
+    │   │   └── v1/
+    │   ├── core/               # Configuration, logging, & exceptions
+    │   ├── db/                 # Database engine, session, & seed script
+    │   ├── models/             # SQLAlchemy ORM data models
+    │   ├── mqtt/               # MQTT consumer background task
+    │   ├── repositories/       # Data access repositories
+    │   ├── schemas/            # Pydantic DTO models
+    │   └── services/           # Business & security services
+    ├── scripts/
+    │   └── seed.py             # Seed execution script
+    └── tests/                  # Pytest unit & integration test suite
 ```
 
-## Testing
+---
 
-The important test cases include:
+## Setup & Local Development
 
-* Valid login
-* Invalid credentials
-* User assignment
-* Vehicle authorization
-* GPS message storage
-* Latest location update
-* Invalid GPS data
-* Cross-user vehicle access
-
-## Running the Project
-
-Start the backend services with:
-
+### 1. Environment Configuration
+Copy `.env.example` to `.env` inside `backend/`:
 ```bash
-docker compose up --build
+cp .env.example backend/.env
 ```
 
-Then start the Flutter application.
+### 2. Install Dependencies
+Initialize virtual environment and install requirements:
+```bash
+cd backend
+python -m venv .venv
+.\.venv\Scripts\activate   # Windows (or source .venv/bin/activate on Unix)
+pip install -r requirements.txt
+```
 
-A GPS simulator can be used to publish test locations and demonstrate the vehicle moving on the map.
+### 3. Run Database Migrations
+Run Alembic async migrations to create tables and indexes:
+```bash
+cd backend
+alembic upgrade head
+```
 
-## Definition of Done
+### 4. Seed Development Data
+Populate deterministic seed data (`User A` $\rightarrow$ `BUS-001`, `User B` $\rightarrow$ `BUS-002`, route stops, initial coordinates):
+```bash
+cd backend
+python -m app.db.seed
+```
 
-The system is ready when:
+### 5. Run FastAPI Application
+Start the Uvicorn dev server:
+```bash
+cd backend
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+- Interactive API Docs: `http://localhost:8000/api/v1/docs`
+- OpenAPI JSON Schema: `http://localhost:8000/api/v1/openapi.json`
 
-* Users can log in.
-* Each user sees their assigned route and vehicle.
-* GPS data is received through MQTT.
-* Current and historical locations are available.
-* Vehicle movement can be shown on the Flutter map.
-* Users cannot access another user's vehicle or GPS history.
+---
 
-## Key Principle
+## Automated Testing
 
-> **Flutter displays the data. FastAPI owns the business logic and security.**
+Run the full Pytest suite (26 tests covering database constraints, seed data, auth, assignment rules, telemetry ingestion, out-of-order engine, and API contracts):
+```bash
+cd backend
+python -m pytest -v
+```
+
+---
+
+## REST API Summary
+
+For full details, headers, status codes, and payload examples, refer to [`docs/API_CONTRACT.md`](docs/API_CONTRACT.md).
+
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/health` | None | System health check (`status`, `version`, `timestamp`). |
+| `POST` | `/api/v1/auth/login` | None | Authenticates credentials; returns JWT bearer token. |
+| `GET` | `/api/v1/me/assignment` | JWT | Resolves user's active assignment (`route` and `vehicle`). |
+| `GET` | `/api/v1/me/vehicle` | JWT | Returns assigned vehicle metadata & status (`ACTIVE`, `OFFLINE`, `UNKNOWN`). |
+| `GET` | `/api/v1/me/vehicle/location` | JWT | Returns assigned vehicle's current location, speed, `recorded_at`, `last_seen_at`. |
+| `GET` | `/api/v1/me/vehicle/history` | JWT | Returns paginated telemetry history with range & keyset cursor options. |
