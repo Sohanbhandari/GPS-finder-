@@ -35,16 +35,16 @@ This checklist tracks the implementation progress across all system phases. Comp
 ---
 
 ## Phase 4: Backend Core & Authentication System
-- [ ] Configure FastAPI core settings, security utilities (passlib bcrypt), and JWT token management.
-- [ ] Implement `POST /api/v1/auth/login` returning signed JWT access token.
-- [ ] Implement HTTP Bearer authentication dependency and user identity resolution.
+- [x] Configure FastAPI core settings, security utilities (passlib bcrypt), and JWT token management.
+- [x] Implement `POST /api/v1/auth/login` returning signed JWT access token.
+- [x] Implement HTTP Bearer authentication dependency and user identity resolution.
 
 ---
 
 ## Phase 5: Assignment Resolution & Server-Side Authorization Engine
-- [ ] Implement active assignment resolution service (`GET /api/v1/me/assignment`).
-- [ ] Enforce assignment integrity rule (`vehicle.route_id == assignment.route_id`).
-- [ ] Enforce server-side authorization on `/api/v1/me/*` endpoints (return `403 Forbidden` for unauthorized vehicle access).
+- [x] Implement active assignment resolution service (`GET /api/v1/me/assignment`).
+- [x] Enforce assignment integrity rule (`vehicle.route_id == assignment.route_id`).
+- [x] Enforce server-side authorization on `/api/v1/me/*` endpoints (return `403 Forbidden` for unauthorized vehicle access).
 
 ---
 
