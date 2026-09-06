@@ -6,6 +6,7 @@
 # Environment & Secret Configuration
 # ------------------------------------------
 .env
+backend/.env
 .env.local
 .env.*.local
 *.pem
