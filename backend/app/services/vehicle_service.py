@@ -7,7 +7,11 @@ from app.core.config import settings
 from app.core.exceptions import ResourceNotFoundException
 from app.models.vehicle import Vehicle
 from app.repositories.vehicle_repository import VehicleRepository
-from app.schemas.vehicle import VehicleDetailResponse, VehicleStatusEnum
+from app.schemas.vehicle import (
+    VehicleDetailResponse,
+    VehicleLocationResponse,
+    VehicleStatusEnum,
+)
 
 
 class VehicleService:
@@ -62,4 +66,25 @@ class VehicleService:
             latest_recorded_at=vehicle.latest_recorded_at,
             last_seen_at=vehicle.last_seen_at,
             created_at=vehicle.created_at,
+        )
+
+    async def get_vehicle_location(self, vehicle_id: UUID) -> VehicleLocationResponse:
+        """
+        Retrieves vehicle's current location and computed status for map rendering.
+        """
+        vehicle = await self.vehicle_repo.get_by_id(vehicle_id)
+        if not vehicle:
+            raise ResourceNotFoundException("Vehicle not found.")
+
+        status_enum = self.compute_vehicle_status(vehicle.last_seen_at)
+
+        return VehicleLocationResponse(
+            vehicle_id=vehicle.id,
+            vehicle_code=vehicle.vehicle_code,
+            status=status_enum,
+            latitude=vehicle.current_latitude,
+            longitude=vehicle.current_longitude,
+            speed=vehicle.current_speed,
+            latest_recorded_at=vehicle.latest_recorded_at,
+            last_seen_at=vehicle.last_seen_at,
         )

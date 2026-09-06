@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 from uuid import UUID
 from sqlalchemy import select
@@ -28,3 +29,21 @@ class VehicleRepository:
         stmt = select(Vehicle).where(Vehicle.vehicle_code == vehicle_code)
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
+
+    def update_location_state(
+        self,
+        vehicle: Vehicle,
+        latitude: float,
+        longitude: float,
+        speed: float,
+        recorded_at: datetime,
+        received_at: datetime,
+    ) -> None:
+        """
+        Updates the denormalized location state and timestamps on a vehicle entity.
+        """
+        vehicle.current_latitude = latitude
+        vehicle.current_longitude = longitude
+        vehicle.current_speed = speed
+        vehicle.latest_recorded_at = recorded_at
+        vehicle.last_seen_at = received_at
