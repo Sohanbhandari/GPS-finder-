@@ -14,18 +14,23 @@ This checklist tracks the implementation progress across all system phases. Comp
 
 ---
 
-## Phase 2: Environment & Container Configuration
-- [ ] Create `.env.example` with database, JWT, MQTT, and Google Maps key templates.
-- [ ] Configure `docker-compose.yml` for local stack (PostgreSQL, Mosquitto MQTT broker, FastAPI backend, Telemetry Simulator).
-- [ ] Create Dockerfile for FastAPI backend application.
+## Phase 2: Backend Foundation + Environment
+- [x] Create `.env.example` with database, JWT, MQTT, and threshold configuration templates.
+- [x] Ensure secret files (`.env`, `backend/.env`) are strictly excluded via `.gitignore`.
+- [x] Create `backend/requirements.txt` with FastAPI, Pydantic, SQLAlchemy async, asyncpg, Alembic, MQTT, pytest, and HTTPX.
+- [x] Create Pydantic `BaseSettings` module (`app/core/config.py`) loading environment variables.
+- [x] Create security-aware logging setup (`app/core/logging.py`) masking sensitive credentials.
+- [x] Create async SQLAlchemy session provider (`app/db/session.py`) and declarative Base (`app/db/base.py`).
+- [x] Create clean health endpoint scaffolding (`GET /api/v1/health`) returning `200 OK`.
+- [x] Setup package placeholders for models, schemas, repositories, services, and mqtt modules.
 
 ---
 
 ## Phase 3: PostgreSQL Database Schema & Alembic Migrations
-- [ ] Initialize Alembic migration framework in `backend/migrations`.
-- [ ] Define SQLAlchemy models for `users`, `routes`, `route_stops`, `vehicles`, `assignments`, and `gps_points`.
-- [ ] Create database tables with constraints and indexes (`idx_unique_active_user`, composite indexes).
-- [ ] Create seed script (`scripts/seed.py`) with test data for User A and User B.
+- [x] Initialize Alembic migration framework in `backend/alembic`.
+- [x] Define SQLAlchemy models for `users`, `routes`, `route_stops`, `vehicles`, `assignments`, and `gps_points`.
+- [x] Create database tables with constraints and indexes (`idx_unique_active_user`, composite indexes).
+- [x] Create seed script (`scripts/seed.py`) with test data for User A and User B.
 
 ---
 
