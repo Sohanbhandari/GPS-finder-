@@ -8,7 +8,15 @@ from app.schemas.assignment import (
     RouteStopResponse,
     VehicleSummaryResponse,
 )
-from app.schemas.vehicle import VehicleDetailResponse, VehicleStatusEnum
+from app.schemas.vehicle import (
+    VehicleDetailResponse,
+    VehicleLocationResponse,
+    VehicleStatusEnum,
+)
+from app.schemas.health import HealthResponse
+from app.schemas.error import ErrorDetail, ErrorResponse
+from app.schemas.telemetry import GpsPointResponse, VehicleHistoryResponse
+from app.schemas.mqtt import GpsTelemetryPayload
 
 __all__ = [
     "LoginRequest",
@@ -19,5 +27,12 @@ __all__ = [
     "RouteStopResponse",
     "VehicleSummaryResponse",
     "VehicleDetailResponse",
+    "VehicleLocationResponse",
     "VehicleStatusEnum",
+    "HealthResponse",
+    "ErrorDetail",
+    "ErrorResponse",
+    "GpsPointResponse",
+    "VehicleHistoryResponse",
+    "GpsTelemetryPayload",
 ]

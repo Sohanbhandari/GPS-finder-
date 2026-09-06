@@ -30,3 +30,19 @@ class VehicleDetailResponse(BaseModel):
     latest_recorded_at: Optional[datetime] = None
     last_seen_at: Optional[datetime] = None
     created_at: datetime
+
+
+class VehicleLocationResponse(BaseModel):
+    """
+    Current vehicle GPS location response model for real-time map rendering.
+    """
+    model_config = ConfigDict(from_attributes=True)
+
+    vehicle_id: UUID
+    vehicle_code: str
+    status: VehicleStatusEnum
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    speed: Optional[float] = None
+    latest_recorded_at: Optional[datetime] = None
+    last_seen_at: Optional[datetime] = None
