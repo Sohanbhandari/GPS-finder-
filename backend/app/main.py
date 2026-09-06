@@ -7,16 +7,25 @@ from app.api.v1.router import api_v1_router
 from app.core.config import settings
 from app.core.exceptions import AppException
 from app.core.logging import logger
+from app.mqtt import mqtt_consumer_manager
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
     Application lifecycle context manager handling startup and shutdown events.
+    Launches MQTT consumer task on startup and stops it on shutdown.
     """
     logger.info(f"Starting {settings.PROJECT_NAME} (v{settings.VERSION})...")
     logger.info(f"Environment settings loaded. API Prefix: {settings.API_V1_STR}")
+
+    # Launch background MQTT telemetry consumer
+    mqtt_consumer_manager.start()
+
     yield
+
+    logger.info("Shutting down background services...")
+    await mqtt_consumer_manager.stop()
     logger.info(f"Shutting down {settings.PROJECT_NAME}...")
 
 
