@@ -1,8 +1,11 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+
 from app.api.v1.router import api_v1_router
 from app.core.config import settings
+from app.core.exceptions import AppException
 from app.core.logging import logger
 
 
@@ -38,6 +41,20 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # Register custom exception handler for standardized domain errors
+    @app.exception_handler(AppException)
+    async def app_exception_handler(request: Request, exc: AppException) -> JSONResponse:
+        logger.warning(f"AppException [{exc.code}] on {request.method} {request.url.path}: {exc.message}")
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={
+                "error": {
+                    "code": exc.code,
+                    "message": exc.message,
+                }
+            },
+        )
 
     # Include API Routers
     app.include_router(api_v1_router, prefix=settings.API_V1_STR)
