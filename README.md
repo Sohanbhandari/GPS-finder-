@@ -97,7 +97,49 @@ GPS-finder-/
 
 ---
 
-## Setup & Local Development
+## Docker Compose & Containerized Deployment
+
+The entire system stack (**PostgreSQL**, **Mosquitto MQTT**, **FastAPI Backend**, and **GPS Simulator**) can be launched from a clean environment using Docker Compose:
+
+### 1. Startup Complete Stack
+Launch all services in background mode with health checking and automatic migration/seeding:
+```bash
+docker-compose up --build -d
+```
+
+### 2. View Service Logs
+Monitor container logs across all services:
+```bash
+docker-compose logs -f
+```
+
+### 3. Explicit Database Migration Command
+Run Alembic migrations manually inside the backend container:
+```bash
+docker-compose exec backend alembic upgrade head
+```
+
+### 4. Explicit Database Seed Command
+Populate initial development seed data manually:
+```bash
+docker-compose exec backend python -m app.db.seed
+```
+
+### 5. Full-System Verification Command
+Execute the automated end-to-end flow verification script against the active stack:
+```bash
+python scripts/verify_full_system.py
+```
+
+### 6. Shutdown Stack
+Stop all containers and purge persistent database volumes for clean teardown:
+```bash
+docker-compose down -v
+```
+
+---
+
+## Setup & Local Development (Bare Metal)
 
 ### 1. Environment Configuration
 Copy `.env.example` to `.env` inside `backend/`:
@@ -141,7 +183,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 ## Automated Testing
 
-Run the full Pytest suite (26 tests covering database constraints, seed data, auth, assignment rules, telemetry ingestion, out-of-order engine, and API contracts):
+Run the full Pytest suite (30 tests covering database constraints, seed data, auth, assignment rules, telemetry ingestion, out-of-order engine, and API contracts):
 ```bash
 cd backend
 python -m pytest -v
@@ -161,3 +203,4 @@ For full details, headers, status codes, and payload examples, refer to [`docs/A
 | `GET` | `/api/v1/me/vehicle` | JWT | Returns assigned vehicle metadata & status (`ACTIVE`, `OFFLINE`, `UNKNOWN`). |
 | `GET` | `/api/v1/me/vehicle/location` | JWT | Returns assigned vehicle's current location, speed, `recorded_at`, `last_seen_at`. |
 | `GET` | `/api/v1/me/vehicle/history` | JWT | Returns paginated telemetry history with range & keyset cursor options. |
+
