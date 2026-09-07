@@ -101,11 +101,13 @@ class TelemetryIngestionService:
                 f"(lat={telemetry.latitude}, lon={telemetry.longitude}, recorded_at={recorded_at.isoformat()})"
             )
         else:
+            latest_str = latest_recorded.isoformat() if latest_recorded else "None"
             logger.info(
                 f"Out-of-order telemetry for vehicle '{vehicle_code}': appended to history, "
                 f"location state preserved (recorded_at={recorded_at.isoformat()} < "
-                f"latest_recorded_at={vehicle.latest_recorded_at.isoformat()})"
+                f"latest_recorded_at={latest_str})"
             )
+
 
         await self.session.commit()
         return True

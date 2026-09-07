@@ -130,8 +130,9 @@ async def test_out_of_order_stale_packet_protection(seeded_session: AsyncSession
     """
     ingestion_service = TelemetryIngestionService(seeded_session)
 
-    t2_newer = datetime(2026, 9, 6, 14, 10, 0, tzinfo=timezone.utc)
-    t1_older = datetime(2026, 9, 6, 14, 5, 0, tzinfo=timezone.utc)
+    now = datetime.now(timezone.utc)
+    t2_newer = now + timedelta(minutes=10)
+    t1_older = now + timedelta(minutes=5)
 
     payload_t2 = {
         "latitude": 27.705000,

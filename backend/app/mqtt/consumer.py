@@ -34,8 +34,9 @@ class MqttConsumerManager:
                 async with aiomqtt.Client(
                     hostname=self.host,
                     port=self.port,
-                    client_id=self.client_id,
+                    identifier=self.client_id,
                 ) as client:
+
                     logger.info("Successfully connected to MQTT broker. Subscribing to topic 'vehicles/+/gps'...")
                     await client.subscribe("vehicles/+/gps")
 
