@@ -12,6 +12,8 @@ backend/.env
 *.pem
 *.key
 *.cert
+local.properties
+**/local.properties
 
 # ------------------------------------------
 # Python / FastAPI Backend

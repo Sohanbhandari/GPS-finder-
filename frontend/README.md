@@ -8,6 +8,7 @@ Production-grade **Flutter** mobile application providing real-time GPS vehicle 
 
 - **Flutter SDK**: `>=3.0.0 <4.0.0`
 - **Dart SDK**: `^3.0.0`
+- **Android SDK**: API level 34 (compileSdk 34, minSdk 21)
 - **Dependencies**: `http: ^1.2.0`, `google_maps_flutter: ^2.5.0`
 
 ### Installation:
@@ -18,12 +19,43 @@ flutter pub get
 
 ---
 
-## 2. API Connection Configuration
+## 2. Android Build Scaffolding & Configuration
+
+The Android platform files are located in `frontend/android/`:
+
+- **Root Build Script**: `frontend/android/build.gradle` (Configured with AGP 8.1.0 & Kotlin 1.8.22)
+- **Settings Script**: `frontend/android/settings.gradle`
+- **App Module Build Script**: `frontend/android/app/build.gradle`
+- **Manifest**: `frontend/android/app/src/main/AndroidManifest.xml`
+- **Kotlin Entry Point**: `frontend/android/app/src/main/kotlin/com/example/gps_finder_flutter/MainActivity.kt`
+
+---
+
+## 3. Secure Google Maps API Key Configuration
+
+The Google Maps API key is injected dynamically into `AndroidManifest.xml` at build time via Gradle manifest placeholders. **Secrets are never committed to source control.**
+
+### Setting Up Your Maps API Key:
+1. Create a `local.properties` file inside `frontend/android/` (or copy from `local.properties.example`):
+   ```properties
+   sdk.dir=C:\\Users\\Asus\\AppData\\Local\\Android\\Sdk
+   flutter.sdk=C:\\path\\to\\flutter
+   MAPS_API_KEY=YOUR_ACTUAL_GOOGLE_MAPS_API_KEY_HERE
+   ```
+2. Alternatively, set an environment variable before building:
+   ```bash
+   export GOOGLE_MAPS_API_KEY="YOUR_ACTUAL_GOOGLE_MAPS_API_KEY_HERE"
+   ```
+3. If no key is configured, Gradle automatically falls back to `GOOGLE_MAPS_API_KEY_REQUIRED` so the build succeeds structurally while preventing fake keys from being committed.
+
+---
+
+## 4. API Connection Configuration
 
 The application communicates with the FastAPI backend via [`ApiService`](file:///c:/Users/Asus/Downloads/GPS-finder-/frontend/lib/services/api_service.dart):
 
 ```dart
-// Android Emulator
+// Android Emulator (automatically detected)
 final apiService = ApiService(baseUrl: 'http://10.0.2.2:8000');
 
 // iOS Simulator / Desktop / Web
@@ -32,7 +64,7 @@ final apiService = ApiService(baseUrl: 'http://localhost:8000');
 
 ---
 
-## 3. Secure Token Storage & Auth Architecture
+## 5. Secure Token Storage & Auth Architecture
 
 - **Token Management**: JWT tokens acquired during login are saved using [`StorageService`](file:///c:/Users/Asus/Downloads/GPS-finder-/frontend/lib/services/storage_service.dart).
 - **Automatic Authorization Header**: All HTTP requests in `ApiService` automatically attach `Authorization: Bearer <token>`.
@@ -40,27 +72,35 @@ final apiService = ApiService(baseUrl: 'http://localhost:8000');
 
 ---
 
-## 4. Google Maps & Polyline Setup
+## 6. Google Maps & Polyline Setup
 
 - **Maps Plugin**: Uses `google_maps_flutter`.
-- **API Key Setup (Android)**: Add Google Maps API key to `android/app/src/main/AndroidManifest.xml`:
-  ```xml
-  <meta-data
-      android:name="com.google.android.geo.API_KEY"
-      android:value="YOUR_GOOGLE_MAPS_API_KEY_HERE"/>
-  ```
 - **Polyline Rendering**: Polyline waypoints are built strictly from route stops returned by `GET /api/v1/me/assignment`, sorted by `sequence ASC` to prevent polyline crisscrossing on the map.
+- **Vehicle Telemetry Marker**: The vehicle marker position is updated dynamically using backend telemetry points fetched via `GET /api/v1/me/vehicle/location`. Phone/device GPS is explicitly disabled (`myLocationEnabled: false`).
 
 ---
 
-## 5. State Management & Polling Flow
+## 7. Running the Application on Android Emulator
 
-- **Pattern**: Clean Controller-State pattern using `ChangeNotifier`.
-- **Polling Loop**: [`TrackingController`](file:///c:/Users/Asus/Downloads/GPS-finder-/frontend/lib/controllers/tracking_controller.dart) manages a 5-second periodic `Timer` that calls `GET /api/v1/me/vehicle/location` to fetch real-time updates and update vehicle marker position on the map.
+1. Start your local FastAPI backend (via Docker Compose or bare-metal Uvicorn):
+   ```bash
+   docker-compose up --build -d
+   ```
+2. Launch your Android Emulator in Android Studio (Device Manager -> Start Device).
+3. Verify the emulator is detected:
+   ```bash
+   flutter devices
+   ```
+4. Run the Flutter app:
+   ```bash
+   cd frontend
+   flutter pub get
+   flutter run
+   ```
 
 ---
 
-## 6. Automated Testing
+## 8. Automated Testing
 
 Run Flutter unit and widget tests:
 ```bash
@@ -70,10 +110,11 @@ flutter test
 
 ---
 
-## 7. Troubleshooting
+## 9. Troubleshooting
 
 | Issue | Cause | Solution |
 | :--- | :--- | :--- |
-| `SocketException: Connection Refused` | Android Emulator cannot reach host machine `localhost`. | Change `baseUrl` to `http://10.0.2.2:8000`. |
-| `Google Maps Blank / Gray Screen` | Missing or invalid Google Maps API Key in AndroidManifest.xml. | Ensure valid Maps API key is configured in Android manifest. |
-| `Auto-Logout on Launch` | Saved JWT token expired or backend database re-seeded. | Re-enter credentials (`driver_a@example.com` / `Password123!`) on login screen. |
+| `SocketException: Connection Refused` | Android Emulator cannot reach host machine `localhost`. | Ensure `baseUrl` is set to `http://10.0.2.2:8000`. |
+| `Google Maps Blank / Gray Screen` | Missing or invalid Google Maps API Key. | Set `MAPS_API_KEY` in `android/local.properties` or environment variable. |
+| `Auto-Logout on Launch` | Saved JWT token expired or backend database re-seeded. | Re-enter credentials (`driver.a@example.com` / `Password123!`) on login screen. |
+| `Gradle Build Error` | Missing Android SDK path in `local.properties`. | Ensure `sdk.dir` is specified in `android/local.properties`. |
