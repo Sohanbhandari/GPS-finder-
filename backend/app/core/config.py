@@ -19,12 +19,12 @@ class Settings(BaseSettings):
 
     # Database Credentials & Connection
     POSTGRES_USER: str = "postgres"
-    POSTGRES_PASSWORD: str = "postgres"
+    POSTGRES_PASSWORD: str
     POSTGRES_DB: str = "gps_tracker"
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/gps_tracker"
 
     # JWT Security Configuration
-    JWT_SECRET_KEY: str = "your_secure_jwt_secret_key_here"
+    JWT_SECRET_KEY: str
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
