@@ -167,6 +167,15 @@ async def test_seed_database_execution(test_session: AsyncSession):
     assert user_b.assignments[0].route.code == "ROUTE-B"
     assert user_b.assignments[0].vehicle.vehicle_code == "BUS-002"
 
+    # Verify User C
+    user_c_stmt = select(User).where(User.email == "driver.c@example.com")
+    user_c = (await test_session.execute(user_c_stmt)).scalar_one()
+    assert user_c.full_name == "Driver Charlie"
+    assert len(user_c.assignments) == 1
+    assert user_c.assignments[0].is_active is True
+    assert user_c.assignments[0].route.code == "ROUTE-C"
+    assert user_c.assignments[0].vehicle.vehicle_code == "BUS-003"
+
     # Verify route stops
     stops_a_stmt = select(RouteStop).join(Route).where(Route.code == "ROUTE-A").order_by(RouteStop.sequence)
     stops_a = (await test_session.execute(stops_a_stmt)).scalars().all()
@@ -176,4 +185,4 @@ async def test_seed_database_execution(test_session: AsyncSession):
     # Idempotency check: running seed again should not duplicate data
     await seed_database(test_session)
     users = (await test_session.execute(select(User))).scalars().all()
-    assert len(users) == 2
+    assert len(users) == 3

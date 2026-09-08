@@ -154,18 +154,18 @@ async def test_no_active_assignment(async_client: AsyncClient, seeded_session: A
     """
     Verify user with no active assignment receives 404 NO_ACTIVE_ASSIGNMENT.
     """
-    # Create User C with no active assignment
-    user_c = User(
-        email="driver.c@example.com",
+    # Create User with no active assignment
+    user_unassigned = User(
+        email="driver.unassigned@example.com",
         password_hash=get_password_hash("Password123!"),
-        full_name="Driver Charlie",
+        full_name="Driver Unassigned",
         role="driver",
     )
-    seeded_session.add(user_c)
+    seeded_session.add(user_unassigned)
     await seeded_session.commit()
 
-    token_c = await get_token_for_user(async_client, "driver.c@example.com")
-    headers = {"Authorization": f"Bearer {token_c}"}
+    token_unassigned = await get_token_for_user(async_client, "driver.unassigned@example.com")
+    headers = {"Authorization": f"Bearer {token_unassigned}"}
 
     response = await async_client.get("/api/v1/me/assignment", headers=headers)
     assert response.status_code == 404

@@ -17,7 +17,7 @@ def get_password_hash(password: str) -> str:
 
 async def seed_database(session: AsyncSession) -> None:
     """
-    Populates the database with deterministic initial development seed data.
+    Populates the database with deterministic initial development seed data (3 Users & Assignments).
     Idempotently checks if seed data exists before insertion.
     """
     logger.info("Checking existing seed data...")
@@ -30,12 +30,12 @@ async def seed_database(session: AsyncSession) -> None:
         logger.info("Seed data already present in database. Skipping seed initialization.")
         return
 
-    logger.info("Seeding database with initial users, routes, stops, vehicles, and active assignments...")
+    logger.info("Seeding database with 3 initial users, routes, stops, vehicles, and active assignments...")
 
     default_password_hash = get_password_hash("Password123!")
     now = datetime.now(timezone.utc)
 
-    # 1. Users
+    # 1. Users (Driver A, Driver B, Driver C)
     user_a = User(
         email="driver.a@example.com",
         password_hash=default_password_hash,
@@ -50,10 +50,17 @@ async def seed_database(session: AsyncSession) -> None:
         role="driver",
         is_active=True,
     )
-    session.add_all([user_a, user_b])
+    user_c = User(
+        email="driver.c@example.com",
+        password_hash=default_password_hash,
+        full_name="Driver Charlie",
+        role="driver",
+        is_active=True,
+    )
+    session.add_all([user_a, user_b, user_c])
     await session.flush()
 
-    # 2. Routes
+    # 2. Routes (Route A, Route B, Route C)
     route_a = Route(
         code="ROUTE-A",
         name="North Campus Loop",
@@ -64,7 +71,12 @@ async def seed_database(session: AsyncSession) -> None:
         name="South City Express",
         description="Express route connecting South Station, Commercial Park, Tech Park, Civic Center, South Plaza, and Terminal B.",
     )
-    session.add_all([route_a, route_b])
+    route_c = Route(
+        code="ROUTE-C",
+        name="East Valley Line",
+        description="Eastern suburban line connecting East Station, Valley Mall, University East, and East Terminal.",
+    )
+    session.add_all([route_a, route_b, route_c])
     await session.flush()
 
     # 3. Route Stops for Route A
@@ -86,10 +98,18 @@ async def seed_database(session: AsyncSession) -> None:
         RouteStop(route_id=route_b.id, sequence=5, name="South Plaza", latitude=27.688000, longitude=85.311000),
         RouteStop(route_id=route_b.id, sequence=6, name="Terminal B", latitude=27.684000, longitude=85.308000),
     ]
-    session.add_all(stops_a + stops_b)
+
+    # Route Stops for Route C
+    stops_c = [
+        RouteStop(route_id=route_c.id, sequence=1, name="East Station", latitude=27.710000, longitude=85.320000),
+        RouteStop(route_id=route_c.id, sequence=2, name="Valley Mall", latitude=27.713000, longitude=85.325000),
+        RouteStop(route_id=route_c.id, sequence=3, name="University East", latitude=27.717000, longitude=85.330000),
+        RouteStop(route_id=route_c.id, sequence=4, name="East Terminal", latitude=27.720000, longitude=85.335000),
+    ]
+    session.add_all(stops_a + stops_b + stops_c)
     await session.flush()
 
-    # 4. Vehicles
+    # 4. Vehicles (BUS-001, BUS-002, BUS-003)
     vehicle_a = Vehicle(
         vehicle_code="BUS-001",
         route_id=route_a.id,
@@ -108,10 +128,19 @@ async def seed_database(session: AsyncSession) -> None:
         latest_recorded_at=now,
         last_seen_at=now,
     )
-    session.add_all([vehicle_a, vehicle_b])
+    vehicle_c = Vehicle(
+        vehicle_code="BUS-003",
+        route_id=route_c.id,
+        current_latitude=27.710000,
+        current_longitude=85.320000,
+        current_speed=0.0,
+        latest_recorded_at=now,
+        last_seen_at=now,
+    )
+    session.add_all([vehicle_a, vehicle_b, vehicle_c])
     await session.flush()
 
-    # 5. Assignments (User A -> Route A -> BUS-001, User B -> Route B -> BUS-002)
+    # 5. Assignments
     assignment_a = Assignment(
         user_id=user_a.id,
         route_id=route_a.id,
@@ -124,7 +153,13 @@ async def seed_database(session: AsyncSession) -> None:
         vehicle_id=vehicle_b.id,
         is_active=True,
     )
-    session.add_all([assignment_a, assignment_b])
+    assignment_c = Assignment(
+        user_id=user_c.id,
+        route_id=route_c.id,
+        vehicle_id=vehicle_c.id,
+        is_active=True,
+    )
+    session.add_all([assignment_a, assignment_b, assignment_c])
     await session.flush()
 
     # 6. Initial GPS Points
@@ -144,10 +179,18 @@ async def seed_database(session: AsyncSession) -> None:
         recorded_at=now,
         received_at=now,
     )
-    session.add_all([gps_point_a, gps_point_b])
+    gps_point_c = GpsPoint(
+        vehicle_id=vehicle_c.id,
+        latitude=27.710000,
+        longitude=85.320000,
+        speed=0.0,
+        recorded_at=now,
+        received_at=now,
+    )
+    session.add_all([gps_point_a, gps_point_b, gps_point_c])
 
     await session.commit()
-    logger.info("Successfully seeded database with deterministic development data.")
+    logger.info("Successfully seeded database with 3 users, routes, and vehicles.")
 
 
 async def main() -> None:
