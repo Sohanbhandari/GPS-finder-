@@ -1,0 +1,5 @@
+# Android Local Properties Template
+# Copy this file to local.properties in android/ or frontend/ directory.
+sdk.dir=C:\\path\\to\\android\\sdk
+flutter.sdk=C:\\path\\to\\flutter\\sdk
+MAPS_API_KEY=YOUR_GOOGLE_MAPS_API_KEY
