@@ -1,11 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../lib/models/api_models.dart';
-import '../lib/models/auth_state.dart';
-import '../lib/models/tracking_state.dart';
-import '../lib/services/api_service.dart';
-import '../lib/services/storage_service.dart';
-import '../lib/controllers/auth_controller.dart';
-import '../lib/controllers/tracking_controller.dart';
+import 'package:gps_finder_flutter/models/auth_state.dart';
+import 'package:gps_finder_flutter/models/tracking_state.dart';
+import 'package:gps_finder_flutter/services/api_service.dart';
+import 'package:gps_finder_flutter/services/storage_service.dart';
+import 'package:gps_finder_flutter/controllers/auth_controller.dart';
+import 'package:gps_finder_flutter/controllers/tracking_controller.dart';
 
 void main() {
   group('AuthController Unit Tests', () {
