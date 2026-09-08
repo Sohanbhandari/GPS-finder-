@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'controllers/auth_controller.dart';
 import 'controllers/tracking_controller.dart';
@@ -9,8 +11,17 @@ import 'services/storage_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Determine backend URL (allows --dart-define=API_BASE_URL=... override)
+  // Defaults to 10.0.2.2 for Android Emulator and localhost for Desktop/Web.
+  const String definedApiUrl = String.fromEnvironment('API_BASE_URL');
+  final String backendUrl = definedApiUrl.isNotEmpty
+      ? definedApiUrl
+      : ((!kIsWeb && Platform.isAndroid)
+          ? 'http://10.0.2.2:8000'
+          : 'http://localhost:8000');
+
   // Instantiate services
-  final apiService = ApiService(baseUrl: 'http://localhost:8000');
+  final apiService = ApiService(baseUrl: backendUrl);
   final storageService = InMemoryStorageService();
 
   // Instantiate auth controller

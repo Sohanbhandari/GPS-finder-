@@ -66,7 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       key: _formKey,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAlignment.stretch,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           // Header Icon & Title
                           const Icon(
@@ -195,8 +195,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             style: TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
                           ),
                           const SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          Wrap(
+                            alignment: WrapAlignment.spaceEvenly,
+                            spacing: 8,
+                            runSpacing: 8,
                             children: [
                               OutlinedButton(
                                 onPressed: isLoading ? null : () => _fillDemoCredentials('driver.a@example.com'),

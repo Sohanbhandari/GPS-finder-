@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import '../controllers/auth_controller.dart';
 import '../controllers/tracking_controller.dart';
-import '../models/api_models.dart';
-import '../models/tracking_state.dart';
 import 'widgets/vehicle_map_view.dart';
 
 /// Interview-Focused Tracking Screen displaying real-time assignment, vehicle status, and location history.
@@ -159,7 +157,6 @@ class _TrackingScreenState extends State<TrackingScreen> {
 
           if (state.isLoaded) {
             final assignment = state.assignment!;
-            final vehicle = state.vehicle!;
             final location = state.location!;
             final history = state.history;
 
@@ -184,7 +181,7 @@ class _TrackingScreenState extends State<TrackingScreen> {
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
-                        crossAxisAlignment: CrossAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -264,7 +261,7 @@ class _TrackingScreenState extends State<TrackingScreen> {
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
-                        crossAxisAlignment: CrossAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             'Route: ${assignment.route.name} (${assignment.route.code})',
@@ -316,7 +313,7 @@ class _TrackingScreenState extends State<TrackingScreen> {
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
-                        crossAxisAlignment: CrossAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -345,7 +342,7 @@ class _TrackingScreenState extends State<TrackingScreen> {
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             '${point.latitude.toStringAsFixed(6)}, ${point.longitude.toStringAsFixed(6)}',
