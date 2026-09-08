@@ -11,6 +11,8 @@ import asyncpg
 async def check_db():
     db_url = os.getenv('DATABASE_URL', 'postgresql+asyncpg://postgres:postgres@postgres:5432/gps_tracker')
     clean_url = db_url.replace('postgresql+asyncpg://', 'postgresql://')
+    if clean_url.startswith('postgres://'):
+        clean_url = clean_url.replace('postgres://', 'postgresql://', 1)
     for attempt in range(30):
         try:
             conn = await asyncpg.connect(clean_url)
